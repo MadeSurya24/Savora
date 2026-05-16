@@ -11,10 +11,8 @@ import 'navigation/main_navigation.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inisialisasi locale Indonesia untuk format tanggal
   await initializeDateFormatting('id_ID', null);
 
-  // Status bar transparan
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -24,7 +22,6 @@ void main() async {
     ),
   );
 
-  // Kunci orientasi portrait saja
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -40,8 +37,12 @@ class SavoraApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(create: (_) => SavingGoalProvider()),
+        ChangeNotifierProvider(
+          create: (_) => TransactionProvider()..loadTransactions(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SavingGoalProvider(),
+        ),
       ],
       child: MaterialApp(
         title: 'Savora',

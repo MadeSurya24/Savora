@@ -29,13 +29,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
-    final txProvider =
-    Provider.of<TransactionProvider>(context, listen: false);
+    final txProvider = Provider.of<TransactionProvider>(context, listen: false);
     await txProvider.loadTransactions();
+
     final recent = await txProvider.getRecentTransactions(limit: 5);
+
     if (mounted) {
       setState(() => _recentTransactions = recent);
     }
+
     await Provider.of<SavingGoalProvider>(context, listen: false).loadGoals();
   }
 
@@ -172,14 +174,20 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
             ),
           ],
         ),
         child: Stack(
           children: [
-            Center(child: Icon(icon, size: 20, color: AppColors.textPrimary)),
+            Center(
+              child: Icon(
+                icon,
+                size: 20,
+                color: AppColors.textPrimary,
+              ),
+            ),
             if (badgeCount > 0)
               Positioned(
                 top: 8,
@@ -236,7 +244,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryGreen.withOpacity(0.4),
+                color: AppColors.primaryGreen.withValues(alpha: 0.4),
                 blurRadius: 24,
                 offset: const Offset(0, 10),
               ),
@@ -258,16 +266,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   Container(
-                    padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.calendar_today_rounded,
-                            size: 11, color: Colors.white),
+                        const Icon(
+                          Icons.calendar_today_rounded,
+                          size: 11,
+                          color: Colors.white,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           DateFormatter.formatMonthYear(DateTime.now()),
@@ -295,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 24),
               Container(
                 height: 1,
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
               ),
               const SizedBox(height: 16),
               Row(
@@ -311,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     width: 1,
                     height: 40,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                   Expanded(
                     child: _buildBalanceStat(
@@ -344,32 +357,42 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, size: 16, color: Colors.white),
+            child: Icon(
+              icon,
+              size: 16,
+              color: Colors.white,
+            ),
           ),
           const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
-              ),
-              Text(
-                CurrencyFormatter.formatShort(amount),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                Text(
+                  CurrencyFormatter.formatShort(amount),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -420,24 +443,19 @@ class _HomeScreenState extends State<HomeScreen> {
         const SectionHeader(title: 'Menu Cepat'),
         const SizedBox(height: 14),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: menus
-              .asMap()
-              .entries
-              .map(
-                (e) => Expanded(
+          children: menus.asMap().entries.map((e) {
+            return Expanded(
               child: Padding(
                 padding: EdgeInsets.only(
-                  right: e.key < menus.length - 1 ? 10 : 0,
+                  right: e.key < menus.length - 1 ? 8 : 0,
                 ),
                 child: _buildQuickMenuItem(e.value)
                     .animate()
                     .fadeIn(delay: Duration(milliseconds: 200 + e.key * 80))
-                    .scale(begin: const Offset(0.9, 0.9)),
+                    .scale(begin: const Offset(0.95, 0.95)),
               ),
-            ),
-          )
-              .toList(),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -447,38 +465,53 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: menu.onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        height: 104,
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: menu.bgColor,
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(menu.icon, color: menu.color, size: 22),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              menu.label,
-              style: const TextStyle(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+              child: Icon(
+                menu.icon,
+                color: menu.color,
+                size: 21,
               ),
-              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  menu.label,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
             ),
           ],
         ),
@@ -494,7 +527,9 @@ class _HomeScreenState extends State<HomeScreen> {
           actionText: 'Lihat Semua',
           onAction: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const TransactionListScreen()),
+            MaterialPageRoute(
+              builder: (_) => const TransactionListScreen(),
+            ),
           ),
         ),
         const SizedBox(height: 14),

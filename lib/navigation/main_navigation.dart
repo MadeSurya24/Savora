@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../AppTheme/app_theme.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/insights/insights_screen.dart';
-import '../screens/savings/savings_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/transaction/add_transaction_screen.dart';
@@ -15,32 +14,57 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
+  // 0 = Beranda
+  // 1 = Wawasan
+  // 2 = FAB (tidak dipakai screen)
+  // 3 = Dompet
+  // 4 = Profil
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    const InsightsScreen(),
-    const SizedBox.shrink(), // placeholder for FAB
-    const WalletScreen(),
-    const ProfileScreen(),
+  /// Mapping index navbar → index IndexedStack
+  /// Ini mencegah RangeError saat membuka halaman Profil.
+  static const Map<int, int> _navIndexToStackIndex = {
+    0: 0,
+    1: 1,
+    3: 2,
+    4: 3,
+  };
+
+  /// Screen utama aplikasi
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    InsightsScreen(),
+    WalletScreen(),
+    ProfileScreen(),
   ];
 
   void _onNavTap(int index) {
+    // Tombol tengah = buka modal tambah transaksi
     if (index == 2) {
       _showAddTransactionSheet();
       return;
     }
-    setState(() => _currentIndex = index);
+
+    // Hindari rebuild tidak perlu
+    if (_navIndexToStackIndex.containsKey(index) &&
+        index != _currentIndex) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   void _showAddTransactionSheet() {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -57,18 +81,29 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
+
             const Text(
               'Tambah Transaksi',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+
             const SizedBox(height: 6),
+
             const Text(
               'Pilih jenis transaksi yang ingin ditambahkan',
               style: TextStyle(
-                  fontSize: 13, color: AppColors.textSecondary),
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
+
             const SizedBox(height: 24),
+
             Row(
               children: [
                 Expanded(
@@ -79,17 +114,21 @@ class _MainNavigationState extends State<MainNavigation> {
                     bgColor: AppColors.lightGreen,
                     onTap: () {
                       Navigator.pop(context);
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const AddTransactionScreen(
-                              initialType: 'income'),
+                            initialType: 'income',
+                          ),
                         ),
                       );
                     },
                   ),
                 ),
+
                 const SizedBox(width: 14),
+
                 Expanded(
                   child: _TransactionTypeButton(
                     icon: Icons.arrow_upward_rounded,
@@ -98,11 +137,13 @@ class _MainNavigationState extends State<MainNavigation> {
                     bgColor: AppColors.expenseLight,
                     onTap: () {
                       Navigator.pop(context);
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => const AddTransactionScreen(
-                              initialType: 'expense'),
+                            initialType: 'expense',
+                          ),
                         ),
                       );
                     },
@@ -110,6 +151,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
               ],
             ),
+
             const SizedBox(height: 8),
           ],
         ),
@@ -119,24 +161,24 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    /// Konversi navbar index → IndexedStack index
+    final stackIndex = _navIndexToStackIndex[_currentIndex] ?? 0;
+
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex == 2 ? 0 : _currentIndex,
-        children: [
-          _screens[0],
-          _screens[1],
-          _screens[3],
-          _screens[4],
-        ],
+        index: stackIndex,
+        children: _screens,
       ),
+
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.white,
-          borderRadius:
-          const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -144,7 +186,10 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -154,19 +199,25 @@ class _MainNavigationState extends State<MainNavigation> {
                   isSelected: _currentIndex == 0,
                   onTap: () => _onNavTap(0),
                 ),
+
                 _NavItem(
                   icon: Icons.bar_chart_rounded,
                   label: 'Wawasan',
                   isSelected: _currentIndex == 1,
                   onTap: () => _onNavTap(1),
                 ),
-                _CenterAddButton(onTap: () => _onNavTap(2)),
+
+                _CenterAddButton(
+                  onTap: () => _onNavTap(2),
+                ),
+
                 _NavItem(
                   icon: Icons.account_balance_wallet_rounded,
                   label: 'Dompet',
                   isSelected: _currentIndex == 3,
                   onTap: () => _onNavTap(3),
                 ),
+
                 _NavItem(
                   icon: Icons.person_rounded,
                   label: 'Profil',
@@ -201,7 +252,10 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 4,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -215,7 +269,9 @@ class _NavItem extends StatelessWidget {
                     : AppColors.textLight,
               ),
             ),
+
             const SizedBox(height: 4),
+
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: TextStyle(
@@ -228,6 +284,7 @@ class _NavItem extends StatelessWidget {
               ),
               child: Text(label),
             ),
+
             if (isSelected)
               Container(
                 margin: const EdgeInsets.only(top: 4),
@@ -237,7 +294,9 @@ class _NavItem extends StatelessWidget {
                   color: AppColors.primaryGreen,
                   shape: BoxShape.circle,
                 ),
-              ),
+              )
+            else
+              const SizedBox(height: 8),
           ],
         ),
       ),
@@ -248,7 +307,9 @@ class _NavItem extends StatelessWidget {
 class _CenterAddButton extends StatelessWidget {
   final VoidCallback onTap;
 
-  const _CenterAddButton({required this.onTap});
+  const _CenterAddButton({
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -259,14 +320,17 @@ class _CenterAddButton extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [AppColors.primaryGreen, AppColors.darkGreen],
+            colors: [
+              AppColors.primaryGreen,
+              AppColors.darkGreen,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primaryGreen.withOpacity(0.45),
+              color: AppColors.primaryGreen.withValues(alpha: 0.45),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -306,7 +370,9 @@ class _TransactionTypeButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+          ),
         ),
         child: Column(
           children: [
@@ -314,12 +380,18 @@ class _TransactionTypeButton extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(
+                icon,
+                color: color,
+                size: 24,
+              ),
             ),
+
             const SizedBox(height: 10),
+
             Text(
               label,
               style: TextStyle(
