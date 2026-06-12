@@ -5,6 +5,7 @@ import '../screens/insights/insights_screen.dart';
 import '../screens/wallet/wallet_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/transaction/add_transaction_screen.dart';
+import '../utils/app_strings.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -55,6 +56,8 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _showAddTransactionSheet() {
+    final strings = context.stringsRead;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -84,9 +87,9 @@ class _MainNavigationState extends State<MainNavigation> {
 
             const SizedBox(height: 20),
 
-            const Text(
-              'Tambah Transaksi',
-              style: TextStyle(
+            Text(
+              strings.addTransaction,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -94,9 +97,9 @@ class _MainNavigationState extends State<MainNavigation> {
 
             const SizedBox(height: 6),
 
-            const Text(
-              'Pilih jenis transaksi yang ingin ditambahkan',
-              style: TextStyle(
+            Text(
+              strings.chooseTransactionType,
+              style: const TextStyle(
                 fontSize: 13,
                 color: AppColors.textSecondary,
               ),
@@ -109,7 +112,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 Expanded(
                   child: _TransactionTypeButton(
                     icon: Icons.arrow_downward_rounded,
-                    label: 'Pemasukan',
+                    label: strings.income,
                     color: AppColors.income,
                     bgColor: AppColors.lightGreen,
                     onTap: () {
@@ -132,7 +135,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 Expanded(
                   child: _TransactionTypeButton(
                     icon: Icons.arrow_upward_rounded,
-                    label: 'Pengeluaran',
+                    label: strings.expense,
                     color: AppColors.expense,
                     bgColor: AppColors.expenseLight,
                     onTap: () {
@@ -163,6 +166,7 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     /// Konversi navbar index → IndexedStack index
     final stackIndex = _navIndexToStackIndex[_currentIndex] ?? 0;
+    final strings = context.strings;
 
     return Scaffold(
       body: IndexedStack(
@@ -195,14 +199,14 @@ class _MainNavigationState extends State<MainNavigation> {
               children: [
                 _NavItem(
                   icon: Icons.home_rounded,
-                  label: 'Beranda',
+                  label: strings.home,
                   isSelected: _currentIndex == 0,
                   onTap: () => _onNavTap(0),
                 ),
 
                 _NavItem(
                   icon: Icons.bar_chart_rounded,
-                  label: 'Wawasan',
+                  label: strings.insights,
                   isSelected: _currentIndex == 1,
                   onTap: () => _onNavTap(1),
                 ),
@@ -213,14 +217,14 @@ class _MainNavigationState extends State<MainNavigation> {
 
                 _NavItem(
                   icon: Icons.account_balance_wallet_rounded,
-                  label: 'Dompet',
+                  label: strings.wallet,
                   isSelected: _currentIndex == 3,
                   onTap: () => _onNavTap(3),
                 ),
 
                 _NavItem(
                   icon: Icons.person_rounded,
-                  label: 'Profil',
+                  label: strings.profile,
                   isSelected: _currentIndex == 4,
                   onTap: () => _onNavTap(4),
                 ),

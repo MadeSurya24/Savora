@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/saving_goal_provider.dart';
 import '../../AppTheme/app_theme.dart';
+import '../../utils/app_strings.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 import '../../models/transaction_model.dart';
@@ -125,12 +126,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Row(
             children: [
-              _buildIconButton(
-                icon: Icons.notifications_outlined,
-                onTap: () {},
-                badgeCount: 2,
-              ),
-              const SizedBox(width: 10),
               Consumer<AuthProvider>(
                 builder: (context, auth, _) {
                   final name = auth.currentUser?.name ?? 'Savora';
@@ -167,55 +162,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    int badgeCount = 0,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-            ),
-          ],
-        ),
-        child: Stack(
-          children: [
-            Center(
-              child: Icon(
-                icon,
-                size: 20,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            if (badgeCount > 0)
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.expense,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildGreeting() {
+    final strings = context.strings;
     final user = context.watch<AuthProvider>().currentUser;
     final firstName = (user?.name ?? 'Teman').trim().split(' ').first;
 
@@ -223,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${DateFormatter.getGreeting()}, $firstName',
+          '${strings.greeting(DateTime.now())}, $firstName',
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -231,9 +179,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ).animate().fadeIn(duration: 400.ms).slideX(begin: -0.1),
         const SizedBox(height: 4),
-        const Text(
-          'Keuangan Anda terlihat sehat hari ini.',
-          style: TextStyle(
+        Text(
+          strings.healthyFinance,
+          style: const TextStyle(
             fontSize: 13.5,
             color: AppColors.textSecondary,
           ),
@@ -243,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBalanceCard() {
+    final strings = context.strings;
     return Consumer<TransactionProvider>(
       builder: (context, provider, _) {
         return Container(
@@ -268,9 +217,9 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Total Saldo',
-                    style: TextStyle(
+                  Text(
+                    strings.totalBalance,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -326,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: _buildBalanceStat(
-                      label: 'Pemasukan',
+                      label: strings.income,
                       amount: provider.totalIncome,
                       icon: Icons.arrow_downward_rounded,
                       isIncome: true,
@@ -339,7 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   Expanded(
                     child: _buildBalanceStat(
-                      label: 'Pengeluaran',
+                      label: strings.expense,
                       amount: provider.totalExpense,
                       icon: Icons.arrow_upward_rounded,
                       isIncome: false,
@@ -411,24 +360,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildQuickMenu() {
+    final strings = context.strings;
     final menus = [
       _QuickMenu(
         icon: Icons.add_circle_rounded,
-        label: 'Pemasukan',
+        label: strings.income,
         color: AppColors.primaryGreen,
         bgColor: AppColors.lightGreen,
         onTap: () => _navigateToAddTransaction('income'),
       ),
       _QuickMenu(
         icon: Icons.remove_circle_rounded,
-        label: 'Pengeluaran',
+        label: strings.expense,
         color: AppColors.expense,
         bgColor: AppColors.expenseLight,
         onTap: () => _navigateToAddTransaction('expense'),
       ),
       _QuickMenu(
         icon: Icons.savings_rounded,
-        label: 'Tabungan',
+        label: strings.savings,
         color: const Color(0xFF3B82F6),
         bgColor: const Color(0xFFEFF6FF),
         onTap: () => Navigator.push(
@@ -438,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       _QuickMenu(
         icon: Icons.bar_chart_rounded,
-        label: 'Analisis',
+        label: strings.analysis,
         color: const Color(0xFF8B5CF6),
         bgColor: const Color(0xFFF5F3FF),
         onTap: () => Navigator.push(
@@ -451,7 +401,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: 'Menu Cepat'),
+        SectionHeader(title: strings.quickMenu),
         const SizedBox(height: 14),
         Row(
           children: menus.asMap().entries.map((e) {
@@ -531,11 +481,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecentTransactions() {
+    final strings = context.strings;
     return Column(
       children: [
         SectionHeader(
-          title: 'Transaksi Terakhir',
-          actionText: 'Lihat Semua',
+          title: strings.recentTransactions,
+          actionText: strings.viewAll,
           onAction: () => Navigator.push(
             context,
             MaterialPageRoute(
@@ -545,11 +496,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 14),
         if (_recentTransactions.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: EmptyStateWidget(
-              title: 'Belum Ada Transaksi',
-              subtitle: 'Mulai catat pemasukan dan pengeluaranmu',
+              title: strings.noTransactions,
+              subtitle: strings.startTracking,
               icon: Icons.receipt_long_rounded,
             ),
           )

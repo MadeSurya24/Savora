@@ -402,11 +402,6 @@ class _SavingsScreenState extends State<SavingsScreen> {
     String colorHex = '#0FA968';
 
     final emojis = ['🎯', '💻', '🏖️', '🏍️', '🛡️', '🏠', '✈️', '📱', '👗', '🎓'];
-    final colors = [
-      '#0FA968', '#3B82F6', '#F59E0B', '#8B5CF6',
-      '#EC4899', '#EF4444', '#14B8A6',
-    ];
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

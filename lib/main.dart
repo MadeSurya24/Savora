@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'AppTheme/app_theme.dart';
+import 'providers/app_settings_provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/saving_goal_provider.dart';
@@ -44,6 +46,14 @@ class SavoraApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => AuthProvider()..initialize(),
         ),
+        ChangeNotifierProxyProvider<AuthProvider, AppSettingsProvider>(
+          create: (_) => AppSettingsProvider(),
+          update: (_, auth, provider) {
+            final settingsProvider = provider ?? AppSettingsProvider();
+            settingsProvider.setUserId(auth.currentUser?.id);
+            return settingsProvider;
+          },
+        ),
         ChangeNotifierProxyProvider<AuthProvider, TransactionProvider>(
           create: (_) => TransactionProvider(),
           update: (_, auth, provider) {
@@ -61,11 +71,25 @@ class SavoraApp extends StatelessWidget {
           },
         ),
       ],
-      child: MaterialApp(
-        title: 'Savora',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const AuthGate(),
+      child: Consumer<AppSettingsProvider>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            title: 'Savora',
+            debugShowCheckedModeBanner: false,
+            locale: Locale(settings.languageCode),
+            supportedLocales: const [
+              Locale('id'),
+              Locale('en'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            theme: AppTheme.lightTheme,
+            home: const AuthGate(),
+          );
+        },
       ),
     );
   }

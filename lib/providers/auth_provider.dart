@@ -90,6 +90,29 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfileName(String name) async {
+    final user = _currentUser;
+    final trimmedName = name.trim();
+    if (user?.id == null || trimmedName.isEmpty) return false;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _db.updateUserName(user!.id!, trimmedName);
+      _currentUser = user.copyWith(name: trimmedName);
+      _errorMessage = null;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = 'Profil gagal diperbarui.';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> _ensureGoogleInitialized() async {
     if (_googleInitialized) return;
     await _googleSignIn.initialize();

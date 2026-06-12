@@ -4,17 +4,26 @@ import 'package:provider/provider.dart';
 import '../../AppTheme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
+import '../../utils/app_strings.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
+import 'about_savora_screen.dart';
+import 'backup_restore_screen.dart';
+import 'edit_profile_screen.dart';
+import 'help_support_screen.dart';
+import 'language_screen.dart';
+import 'security_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final strings = context.strings;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: const SavoraAppBar(title: 'Profil'),
+      appBar: SavoraAppBar(title: strings.profile),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 100),
         child: Column(
@@ -94,9 +103,9 @@ class ProfileScreen extends StatelessWidget {
                   color: AppColors.lightGreen,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text(
-                  'Akun Google',
-                  style: TextStyle(
+                child: Text(
+                  context.strings.googleAccount,
+                  style: const TextStyle(
                     color: AppColors.primaryGreen,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
@@ -113,25 +122,26 @@ class ProfileScreen extends StatelessWidget {
   Widget _buildStatsCard(BuildContext context) {
     return Consumer<TransactionProvider>(
       builder: (context, provider, _) {
+        final strings = context.strings;
         return AppCard(
           child: Row(
             children: [
               _ProfileStat(
-                label: 'Transaksi',
+                label: strings.transactions,
                 value: '${provider.allTransactions.length}',
                 icon: Icons.receipt_long_rounded,
                 color: AppColors.primaryGreen,
               ),
               _buildDivider(),
               _ProfileStat(
-                label: 'Pemasukan',
+                label: strings.income,
                 value: CurrencyFormatter.formatShort(provider.totalIncome),
                 icon: Icons.trending_up_rounded,
                 color: AppColors.income,
               ),
               _buildDivider(),
               _ProfileStat(
-                label: 'Pengeluaran',
+                label: strings.expense,
                 value: CurrencyFormatter.formatShort(provider.totalExpense),
                 icon: Icons.trending_down_rounded,
                 color: AppColors.expense,
@@ -153,46 +163,49 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildMenuSection(BuildContext context) {
+    final strings = context.strings;
     final items = [
       _MenuItem(
         icon: Icons.person_outline_rounded,
-        label: 'Edit Profil',
+        label: strings.editProfile,
         color: AppColors.primaryGreen,
-      ),
-      _MenuItem(
-        icon: Icons.notifications_outlined,
-        label: 'Notifikasi',
-        color: const Color(0xFF3B82F6),
+        screenBuilder: (_) => const EditProfileScreen(),
       ),
       _MenuItem(
         icon: Icons.security_rounded,
-        label: 'Keamanan',
+        label: strings.security,
         color: const Color(0xFF8B5CF6),
+        screenBuilder: (_) => const SecurityScreen(),
       ),
       _MenuItem(
         icon: Icons.backup_rounded,
-        label: 'Backup & Restore',
+        label: strings.backupRestore,
         color: const Color(0xFFF59E0B),
+        screenBuilder: (_) => const BackupRestoreScreen(),
       ),
       _MenuItem(
         icon: Icons.language_rounded,
-        label: 'Bahasa',
+        label: strings.language,
         color: const Color(0xFF14B8A6),
+        screenBuilder: (_) => const LanguageScreen(),
       ),
       _MenuItem(
         icon: Icons.help_outline_rounded,
-        label: 'Bantuan & Dukungan',
+        label: strings.helpSupport,
         color: const Color(0xFF6366F1),
+        screenBuilder: (_) => const HelpSupportScreen(),
       ),
       _MenuItem(
         icon: Icons.info_outline_rounded,
-        label: 'Tentang Savora',
+        label: strings.aboutSavora,
         color: const Color(0xFF94A3B8),
+        screenBuilder: (_) => const AboutSavoraScreen(),
       ),
       _MenuItem(
         icon: Icons.logout_rounded,
-        label: 'Keluar',
+        label: strings.logout,
         color: AppColors.expense,
+        isLogout: true,
       ),
     ];
 
@@ -230,9 +243,9 @@ class ProfileScreen extends StatelessWidget {
                   color: AppColors.textLight,
                   size: 20,
                 ),
-                onTap: item.label == 'Keluar'
+                onTap: item.isLogout
                     ? () => _confirmLogout(context)
-                    : () {},
+                    : () => _openMenu(context, item),
               ),
               if (!isLast)
                 Padding(
@@ -247,24 +260,23 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Future<void> _confirmLogout(BuildContext context) async {
+    final strings = context.stringsRead;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Keluar dari akun?'),
-        content: const Text(
-          'Kamu bisa masuk lagi dengan email dan password yang sama.',
-        ),
+        title: Text(strings.signOutTitle),
+        content: Text(strings.signOutMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
+            child: Text(strings.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.expense,
             ),
-            child: const Text('Keluar'),
+            child: Text(strings.signOut),
           ),
         ],
       ),
@@ -273,6 +285,16 @@ class ProfileScreen extends StatelessWidget {
     if (confirm == true && context.mounted) {
       await context.read<AuthProvider>().logout();
     }
+  }
+
+  void _openMenu(BuildContext context, _MenuItem item) {
+    final builder = item.screenBuilder;
+    if (builder == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: builder),
+    );
   }
 }
 
@@ -322,10 +344,14 @@ class _MenuItem {
   final IconData icon;
   final String label;
   final Color color;
+  final WidgetBuilder? screenBuilder;
+  final bool isLogout;
 
   _MenuItem({
     required this.icon,
     required this.label,
     required this.color,
+    this.screenBuilder,
+    this.isLogout = false,
   });
 }

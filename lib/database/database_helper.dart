@@ -27,7 +27,7 @@ class DatabaseHelper {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createTables,
       onUpgrade: _upgradeTables,
     );
@@ -71,6 +71,8 @@ class DatabaseHelper {
         FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
       )
     ''');
+
+    await _createUserSettingsTable(db);
   }
 
   Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
@@ -99,6 +101,23 @@ class DatabaseHelper {
       await _addColumnIfMissing(db, 'transactions', 'userId', 'INTEGER NOT NULL DEFAULT 1');
       await _addColumnIfMissing(db, 'saving_goals', 'userId', 'INTEGER NOT NULL DEFAULT 1');
     }
+
+    if (oldVersion < 3) {
+      await _createUserSettingsTable(db);
+    }
+  }
+
+  Future<void> _createUserSettingsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS user_settings (
+        userId INTEGER PRIMARY KEY,
+        languageCode TEXT NOT NULL DEFAULT 'id',
+        appLockEnabled INTEGER NOT NULL DEFAULT 0,
+        pinHash TEXT,
+        updatedAt TEXT NOT NULL,
+        FOREIGN KEY (userId) REFERENCES users (id) ON DELETE CASCADE
+      )
+    ''');
   }
 
   Future<void> _addColumnIfMissing(
@@ -145,6 +164,60 @@ class DatabaseHelper {
     return UserModel.fromMap(maps.first);
   }
 
+  Future<int> updateUserName(int id, String name) async {
+    final db = await database;
+    return db.update(
+      'users',
+      {'name': name},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // User settings
+
+  Future<Map<String, dynamic>> getUserSettings(int userId) async {
+    final db = await database;
+    final maps = await db.query(
+      'user_settings',
+      where: 'userId = ?',
+      whereArgs: [userId],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) return maps.first;
+
+    final defaults = {
+      'userId': userId,
+      'languageCode': 'id',
+      'appLockEnabled': 0,
+      'pinHash': null,
+      'updatedAt': DateTime.now().toIso8601String(),
+    };
+    await db.insert('user_settings', defaults);
+    return defaults;
+  }
+
+  Future<void> saveUserSettings({
+    required int userId,
+    required String languageCode,
+    required bool appLockEnabled,
+    String? pinHash,
+  }) async {
+    final db = await database;
+    await db.insert(
+      'user_settings',
+      {
+        'userId': userId,
+        'languageCode': languageCode,
+        'appLockEnabled': appLockEnabled ? 1 : 0,
+        'pinHash': pinHash,
+        'updatedAt': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
   // Transactions
 
   Future<int> insertTransaction(TransactionModel transaction, int userId) async {
@@ -164,6 +237,17 @@ class DatabaseHelper {
       orderBy: 'date DESC',
     );
     return maps.map(TransactionModel.fromMap).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getTransactionsForBackup(int userId) async {
+    final db = await database;
+    return db.query(
+      'transactions',
+      columns: ['title', 'amount', 'type', 'category', 'date', 'note'],
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'date DESC',
+    );
   }
 
   Future<List<TransactionModel>> getRecentTransactions(
@@ -283,6 +367,24 @@ class DatabaseHelper {
     return maps.map(SavingGoalModel.fromMap).toList();
   }
 
+  Future<List<Map<String, dynamic>>> getSavingGoalsForBackup(int userId) async {
+    final db = await database;
+    return db.query(
+      'saving_goals',
+      columns: [
+        'title',
+        'targetAmount',
+        'currentAmount',
+        'deadline',
+        'emoji',
+        'colorHex',
+      ],
+      where: 'userId = ?',
+      whereArgs: [userId],
+      orderBy: 'id DESC',
+    );
+  }
+
   Future<int> updateSavingGoal(SavingGoalModel goal, int userId) async {
     final db = await database;
     return db.update(
@@ -312,5 +414,89 @@ class DatabaseHelper {
       ''',
       [amount, id, userId],
     );
+  }
+
+  Future<void> replaceUserDataFromBackup({
+    required int userId,
+    required List<Map<String, dynamic>> transactions,
+    required List<Map<String, dynamic>> savingGoals,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete(
+        'transactions',
+        where: 'userId = ?',
+        whereArgs: [userId],
+      );
+      await txn.delete(
+        'saving_goals',
+        where: 'userId = ?',
+        whereArgs: [userId],
+      );
+
+      for (final transaction in transactions) {
+        await txn.insert(
+          'transactions',
+          _normalizeTransactionBackup(transaction, userId),
+        );
+      }
+
+      for (final goal in savingGoals) {
+        await txn.insert(
+          'saving_goals',
+          _normalizeSavingGoalBackup(goal, userId),
+        );
+      }
+    });
+  }
+
+  Map<String, dynamic> _normalizeTransactionBackup(
+    Map<String, dynamic> raw,
+    int userId,
+  ) {
+    final amount = raw['amount'];
+    final type = raw['type']?.toString() == 'income' ? 'income' : 'expense';
+    final parsedDate = DateTime.tryParse(raw['date']?.toString() ?? '');
+
+    return {
+      'userId': userId,
+      'title': raw['title']?.toString().trim().isNotEmpty == true
+          ? raw['title'].toString().trim()
+          : 'Transaksi',
+      'amount': amount is num
+          ? amount.toDouble()
+          : double.tryParse(amount?.toString() ?? '') ?? 0.0,
+      'type': type,
+      'category': raw['category']?.toString().trim().isNotEmpty == true
+          ? raw['category'].toString().trim()
+          : (type == 'income' ? 'salary' : 'other'),
+      'date': (parsedDate ?? DateTime.now()).toIso8601String(),
+      'note': raw['note']?.toString(),
+    };
+  }
+
+  Map<String, dynamic> _normalizeSavingGoalBackup(
+    Map<String, dynamic> raw,
+    int userId,
+  ) {
+    final targetAmount = raw['targetAmount'];
+    final currentAmount = raw['currentAmount'];
+    final parsedDeadline = DateTime.tryParse(raw['deadline']?.toString() ?? '');
+
+    return {
+      'userId': userId,
+      'title': raw['title']?.toString().trim().isNotEmpty == true
+          ? raw['title'].toString().trim()
+          : 'Target Tabungan',
+      'targetAmount': targetAmount is num
+          ? targetAmount.toDouble()
+          : double.tryParse(targetAmount?.toString() ?? '') ?? 0.0,
+      'currentAmount': currentAmount is num
+          ? currentAmount.toDouble()
+          : double.tryParse(currentAmount?.toString() ?? '') ?? 0.0,
+      'deadline': (parsedDeadline ?? DateTime.now()).toIso8601String(),
+      'emoji': raw['emoji']?.toString(),
+      'colorHex': raw['colorHex']?.toString(),
+    };
   }
 }
