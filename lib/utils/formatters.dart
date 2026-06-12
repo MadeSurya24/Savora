@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 class CurrencyFormatter {
@@ -85,5 +86,45 @@ class DateFormatter {
       return months[parts[1]] ?? monthStr;
     }
     return monthStr;
+  }
+}
+
+class RupiahInputFormatter extends TextInputFormatter {
+  static final NumberFormat _formatter = NumberFormat.decimalPattern('id_ID');
+  static final RegExp _nonDigit = RegExp(r'[^0-9]');
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = onlyDigits(newValue.text);
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    final value = int.tryParse(digits) ?? 0;
+    final formatted = _formatter.format(value);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  static String onlyDigits(String value) {
+    return value.replaceAll(_nonDigit, '');
+  }
+
+  static double? parse(String value) {
+    final digits = onlyDigits(value);
+    if (digits.isEmpty) return null;
+    return double.tryParse(digits);
+  }
+
+  static String format(num amount) {
+    return _formatter.format(amount.round());
   }
 }

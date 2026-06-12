@@ -5,6 +5,7 @@ import '../database/database_helper.dart';
 class TransactionProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper();
 
+  int? _userId;
   List<TransactionModel> _transactions = [];
   List<TransactionModel> _filteredTransactions = [];
   bool _isLoading = false;
@@ -26,15 +27,38 @@ class TransactionProvider extends ChangeNotifier {
   Map<String, double> _expenseByCategory = {};
   Map<String, double> get expenseByCategory => _expenseByCategory;
 
+  void setUserId(int? userId) {
+    if (_userId == userId) return;
+    _userId = userId;
+    if (userId == null) {
+      _transactions = [];
+      _filteredTransactions = [];
+      _totalIncome = 0;
+      _totalExpense = 0;
+      _expenseByCategory = {};
+    }
+  }
+
   Future<void> loadTransactions() async {
+    final userId = _userId;
+    if (userId == null) {
+      _transactions = [];
+      _filteredTransactions = [];
+      _totalIncome = 0;
+      _totalExpense = 0;
+      _expenseByCategory = {};
+      notifyListeners();
+      return;
+    }
+
     _isLoading = true;
     notifyListeners();
 
     try {
-      _transactions = await _db.getAllTransactions();
-      _totalIncome = await _db.getTotalByType('income');
-      _totalExpense = await _db.getTotalByType('expense');
-      _expenseByCategory = await _db.getExpenseByCategory();
+      _transactions = await _db.getAllTransactions(userId);
+      _totalIncome = await _db.getTotalByType('income', userId);
+      _totalExpense = await _db.getTotalByType('expense', userId);
+      _expenseByCategory = await _db.getExpenseByCategory(userId);
       _applyFilter();
     } catch (e) {
       debugPrint('Error loading transactions: $e');
@@ -45,21 +69,29 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   Future<List<TransactionModel>> getRecentTransactions({int limit = 5}) async {
-    return await _db.getRecentTransactions(limit: limit);
+    final userId = _userId;
+    if (userId == null) return [];
+    return await _db.getRecentTransactions(userId, limit: limit);
   }
 
   Future<void> addTransaction(TransactionModel transaction) async {
-    await _db.insertTransaction(transaction);
+    final userId = _userId;
+    if (userId == null) return;
+    await _db.insertTransaction(transaction, userId);
     await loadTransactions();
   }
 
   Future<void> updateTransaction(TransactionModel transaction) async {
-    await _db.updateTransaction(transaction);
+    final userId = _userId;
+    if (userId == null) return;
+    await _db.updateTransaction(transaction, userId);
     await loadTransactions();
   }
 
   Future<void> deleteTransaction(int id) async {
-    await _db.deleteTransaction(id);
+    final userId = _userId;
+    if (userId == null) return;
+    await _db.deleteTransaction(id, userId);
     await loadTransactions();
   }
 
@@ -95,10 +127,14 @@ class TransactionProvider extends ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> getWeeklyExpenses() async {
-    return await _db.getWeeklyExpenses();
+    final userId = _userId;
+    if (userId == null) return [];
+    return await _db.getWeeklyExpenses(userId);
   }
 
   Future<List<Map<String, dynamic>>> getMonthlyExpenses() async {
-    return await _db.getMonthlyExpenses();
+    final userId = _userId;
+    if (userId == null) return [];
+    return await _db.getMonthlyExpenses(userId);
   }
 }

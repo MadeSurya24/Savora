@@ -467,6 +467,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
                 TextField(
                   controller: targetCtrl,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [RupiahInputFormatter()],
                   decoration: const InputDecoration(
                     hintText: 'Target nominal',
                     prefixText: 'Rp ',
@@ -515,9 +516,11 @@ class _SavingsScreenState extends State<SavingsScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (titleCtrl.text.isEmpty || targetCtrl.text.isEmpty) return;
+                      final targetAmount = RupiahInputFormatter.parse(targetCtrl.text);
+                      if (targetAmount == null || targetAmount <= 0) return;
                       final goal = SavingGoalModel(
                         title: titleCtrl.text,
-                        targetAmount: double.tryParse(targetCtrl.text) ?? 0,
+                        targetAmount: targetAmount,
                         currentAmount: 0,
                         deadline: deadline,
                         emoji: emoji,
@@ -574,6 +577,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
             TextField(
               controller: ctrl,
               keyboardType: TextInputType.number,
+              inputFormatters: [RupiahInputFormatter()],
               autofocus: true,
               decoration: const InputDecoration(
                 hintText: 'Nominal',
@@ -586,7 +590,7 @@ class _SavingsScreenState extends State<SavingsScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  final amount = double.tryParse(ctrl.text);
+                  final amount = RupiahInputFormatter.parse(ctrl.text);
                   if (amount != null && amount > 0) {
                     provider.addToGoal(goal.id!, amount);
                     Navigator.pop(context);

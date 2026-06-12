@@ -6,6 +6,7 @@ import '../../providers/transaction_provider.dart';
 import '../../models/transaction_model.dart';
 import '../../models/category_model.dart';
 import '../../AppTheme/app_theme.dart';
+import '../../utils/formatters.dart';
 import '../../widgets/common_widgets.dart';
 
 class AddTransactionScreen extends StatefulWidget {
@@ -42,7 +43,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (widget.editTransaction != null) {
       final t = widget.editTransaction!;
       _titleController.text = t.title;
-      _amountController.text = t.amount.toStringAsFixed(0);
+      _amountController.text = RupiahInputFormatter.format(t.amount);
       _noteController.text = t.note ?? '';
       _type = t.type;
       _selectedCategory = t.category;
@@ -198,6 +199,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         TextFormField(
           controller: _amountController,
           keyboardType: TextInputType.number,
+          inputFormatters: [RupiahInputFormatter()],
           style: const TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
@@ -230,12 +232,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               return 'Masukkan nominal';
             }
 
-            final amountText = v
-                .replaceAll('.', '')
-                .replaceAll(',', '')
-                .trim();
-
-            final amount = double.tryParse(amountText);
+            final amount = RupiahInputFormatter.parse(v);
 
             if (amount == null) return 'Nominal tidak valid';
             if (amount <= 0) return 'Nominal harus lebih dari 0';
@@ -521,12 +518,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final amountText = _amountController.text
-          .replaceAll('.', '')
-          .replaceAll(',', '')
-          .trim();
-
-      final amount = double.tryParse(amountText);
+      final amount = RupiahInputFormatter.parse(_amountController.text);
 
       if (amount == null || amount <= 0) {
         throw Exception('Nominal tidak valid');

@@ -1,0 +1,63 @@
+{
+  "project_info": {
+    "project_number": "4005191072",
+    "project_id": "savora-4bb92",
+    "storage_bucket": "savora-4bb92.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:4005191072:android:b84447ef9782a1195e98c5",
+        "android_client_info": {
+          "package_name": "com.penacode.savora"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "4005191072-oktoi536ljrvg3k7pptin2t94rn9bm9v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.penacode.savora",
+            "certificate_hash": "a40bfc1d0dfea2864482af5648121c245a0c875c"
+          }
+        },
+        {
+          "client_id": "4005191072-q4qirv1e9vn2deme52n6qbspcd8tb2ir.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.penacode.savora",
+            "certificate_hash": "571cd8049a7f099d9d4e29c3e69ac3b2b29c1592"
+          }
+        },
+        {
+          "client_id": "4005191072-qlutbumhn2t00vc87tabmlad8ek4ljbr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.penacode.savora",
+            "certificate_hash": "38f4337562f0c5cbe8f0792622152123d2fcbf85"
+          }
+        },
+        {
+          "client_id": "4005191072-6pv0n0qkbjgmdktdqjohpctbsk99kjqa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyClkkxahAk6XDHX38BUGxlBXlRnsFem1eY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "4005191072-6pv0n0qkbjgmdktdqjohpctbsk99kjqa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

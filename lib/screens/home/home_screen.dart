@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/transaction_provider.dart';
 import '../../providers/saving_goal_provider.dart';
 import '../../AppTheme/app_theme.dart';
@@ -130,27 +131,34 @@ class _HomeScreenState extends State<HomeScreen> {
                 badgeCount: 2,
               ),
               const SizedBox(width: 10),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Center(
-                  child: Text(
-                    'M',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
+              Consumer<AuthProvider>(
+                builder: (context, auth, _) {
+                  final name = auth.currentUser?.name ?? 'Savora';
+                  final initial = name.isNotEmpty ? name[0].toUpperCase() : 'S';
+
+                  return Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                ),
+                    child: Center(
+                      child: Text(
+                        initial,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -208,11 +216,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGreeting() {
+    final user = context.watch<AuthProvider>().currentUser;
+    final firstName = (user?.name ?? 'Teman').trim().split(' ').first;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${DateFormatter.getGreeting()}, Made 👋',
+          '${DateFormatter.getGreeting()}, $firstName',
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
